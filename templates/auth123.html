@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2FA Demo</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+</head>
+<body>
+    <div class="container">
+        <h1>2FA with TOTP Demo</h1>
+
+        <h2>Register</h2>
+        <input type="text" id="username" placeholder="Username">
+        <button onclick="register()">Register and Get QR Code</button>
+        <br><br>
+        <img id="qr-code" alt="QR Code will appear here">
+        <br><br>
+
+        <h2>Verify Code</h2>
+        <input type="text" id="code" placeholder="Enter OTP">
+        <button onclick="verifyCode()">Verify OTP</button>
+        <p id="result"></p>
+    </div>
+
+    <script>
+        async function register() {
+            const username = document.getElementById('username').value;
+            const response = await fetch('/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username })
+            });
+            const data = await response.json();
+            if (data.qr_code) {
+                document.getElementById('qr-code').src = "data:image/png;base64," + data.qr_code;
+            } else {
+                document.getElementById('result').innerText = data.error;
+                document.getElementById('result').className = 'error';
+            }
+        }
+
+        async function verifyCode() {
+            const code = document.getElementById('code').value;
+            const response = await fetch('/verify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code })
+            });
+            const data = await response.json();
+            document.getElementById('result').innerText = data.message || data.error;
+            document.getElementById('result').className = data.message ? 'success' : 'error';
+        }
+    </script>
+</body>
+</html>
